@@ -73,6 +73,11 @@ class LevelingSlash(commands.Cog):
         await set_bg_image(self.bot, interaction.user.id, interaction.guild.id, "")
         await interaction.send("Background image has been set to default")
 
+    @slash_command(description="Set text color of your name in your rank card")
+    async def setcolor(self, interaction: Interaction, *, color: str, color2: str, color3: str):
+        """Set color of the text of your rank card"""
+        await set_text_color(self.bot, interaction.user.id, interaction.guild.id, color, color2, color3)
+        await interaction.send(ephemeral=True, content=f"Text color has been updated")
 
 def setup(bot: commands.Bot):
     bot.add_cog(LevelingSlash(bot))
