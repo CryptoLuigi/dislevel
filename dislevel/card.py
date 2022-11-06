@@ -67,16 +67,12 @@ def get_card(data, nick:str):
 
     print(f'This is display name in card:{display_name}')
 
-    display_name_len = len(display_name)
-
     print(display_name_len)
 
     if display_name_len >= 20:
         fontsl = 1
     else:
         fontsl = 0
-
-    print(fontsl)
 
     if font == None:
         if fontsl == 1:
