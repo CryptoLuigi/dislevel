@@ -65,15 +65,13 @@ def get_card(data, nick:str):
     else:
         display_name = f"{data['name']}"
 
-    print(f'This is display name in card:{display_name}')
-
-    print(display_name_len)
+    display_name_len = len(display_name)
 
     if display_name_len >= 20:
         fontsl = 1
     else:
         fontsl = 0
-
+        
     if font == None:
         if fontsl == 1:
             font_40 = Font.msgothic(size=30, variant="bold")
@@ -245,12 +243,13 @@ def get_card(data, nick:str):
         (390, 135), f"Rank : {data['position']}", font=font_25, color=tcolor3
     )
     user_level=(data["level"])
-    
+
     min_xp = 0
     var_level = 0
     for i in range(0 , user_level):
+    
         min_xp = min_xp + (5*(var_level**2)+(50*var_level)+100)
-        var_level = var_level + 1
+        var_level = var_level + 1 
 
     xp=(data['xp'])
     display_xp = xp - min_xp
