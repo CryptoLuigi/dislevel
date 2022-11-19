@@ -1,10 +1,10 @@
-# Dislevel
+# Dendrank
 Making leveling easier for small as well as big bot
 
 # Installation
-`pip install dislevel`
+`pip install dendrank`
 
-# Check Examples [Here](https://github.com/shahriyardx/dislevel/tree/master/examples)
+# Check Examples [Here](https://github.com/CryptoLuigi/dislevel/tree/master/examples)
 
 # Usage
 
