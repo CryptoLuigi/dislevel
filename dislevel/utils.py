@@ -24,8 +24,10 @@ async def prepare_db(database, additional_fields: List[Field] = list()) -> None:
         Field(name="text_color2", type="TEXT"),
         Field(name="text_color3", type="TEXT"),
         Field(name="overlay", type="INT", null=False, default=1),
-        Field(name="last_message", type="NUMERIC", null=False, default=0),
-        Field(name="font", type="INT", null=False, default=1),              
+        Field(name="last_message", type="NUMERIC"),
+        Field(name="font", type="INT", null=False, default=1),     
+        Field(name="first_run", type="INT"),
+        Field(name="nick", type="INT"),         
     ]
 
     all_fields = default_fields + additional_fields
@@ -46,6 +48,40 @@ async def prepare_db(database, additional_fields: List[Field] = list()) -> None:
         field_schema += statement + (", " if index < len(all_fields) - 1 else "")
 
     schema = f"CREATE TABLE IF NOT EXISTS {leveling_table}({field_schema})"
+
+    try:
+        await database.execute(schema)
+    except Exception as e:
+        print(e)
+
+
+    server_settings_table = "server_settings" 
+
+    default_fields = [
+        Field(name="id", type="BIGSERIAL", primary=True),
+        Field(name="guild_id", type="BIGINT", null=False),
+        Field(name="name", type="TEXT"),
+        Field(name="value", type="TEXT"),        
+    ]
+
+    all_fields = default_fields + additional_fields
+    field_schema = ""
+
+    for index, field in enumerate(all_fields):
+        statement = f"{field.name} {field.type}"
+
+        if field.primary:
+            statement += " PRIMARY KEY"
+
+        if not field.null:
+            statement += " NOT NULL"
+
+        if field.default != None:
+            statement = f"{statement} DEFAULT %r" % field.default
+
+        field_schema += statement + (", " if index < len(all_fields) - 1 else "")
+
+    schema = f"CREATE TABLE IF NOT EXISTS {server_settings_table}({field_schema})"
 
     try:
         await database.execute(schema)
@@ -447,7 +483,7 @@ async def get_page(bot, interaction, page:int) -> None:
 
     embed = Embed(title=f"Leaderboard", description=f"{leaderboard_content}",color=0x006bb1)
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1029266425862434846/1030948597547663420/80b67817a5b119041027ce242452026a.png?size=4096")
-    embed.set_footer(text=f"Page ({page}/{last_page})", icon_url="https://cdn.discordapp.com/attachments/1029782845071294595/1037140824875614278/unknown.png")
+    embed.set_footer(text=f"{interaction.guild} Page ({page}/{last_page})", icon_url = interaction.guild.icon)
     try:
         await interaction.response.edit_message(embed=embed, view=view)
     except:

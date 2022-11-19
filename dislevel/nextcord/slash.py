@@ -214,10 +214,7 @@ class LevelingSlash(commands.Cog):
         """See the server leaderboard"""
         current_channel = f"{interaction.channel}"
         if current_channel == f'bots' or current_channel == f'bot-development'or current_channel ==f'🐍-bots':
-            if page == None:
-                await get_page(self.bot, interaction, page)
             await get_page(self.bot, interaction, page)
-            print(f"Leaderboard Requested by {interaction.user.name}")
         else:
             await interaction.response.send_message(ephemeral=True, content=f"{interaction.user.mention} This can only be used in {botchannel}")
 
