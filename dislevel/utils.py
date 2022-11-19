@@ -453,7 +453,6 @@ async def get_page(bot, interaction, page:int) -> None:
     except:
         await interaction.response.send_message(embed=embed, view=view)
 
-
 async def set_first_run(bot, member_id: int, guild_id: int) -> None:
     """Set first run"""
     database = bot.dislevel_database
@@ -470,3 +469,166 @@ async def set_first_run(bot, member_id: int, guild_id: int) -> None:
         """,
         {"first_run": firstrun, "guild_id": guild_id, "member_id": member_id},
     )
+
+async def get_bg_data(bot, guild_id: int) -> Union[dict, None]:
+    """Returns data number of custom bgs"""
+    database = bot.dislevel_database
+    name="custom_bg"
+
+    data = await database.fetch_one(
+        f"""
+        SELECT  value 
+        FROM    server_settings 
+        WHERE   guild_id = :guild_id 
+        AND     name = :name
+        """,
+        {"guild_id": guild_id, "name": name},
+    )
+
+    if not data:
+        return None
+
+    return data
+
+async def get_bg_value(bot, guild_id: int, bgnum:int) -> Union[dict, None]:
+    """Returns data number of custom bgs"""
+    database = bot.dislevel_database
+    bgname = f"bg{bgnum}"
+
+    data = await database.fetch_one(
+        f"""
+        SELECT  value 
+        FROM    server_settings 
+        WHERE   guild_id = :guild_id 
+        AND     name = :name
+        """,
+        {"guild_id": guild_id, "name": bgname},
+    )
+
+    if not data:
+        return None
+
+    return data
+
+async def add_bg_image(bot, guild_id: int, bgmax:int, value:str) -> None:
+    """Set bg image"""
+    database = bot.dislevel_database
+    custom_bg="custom_bg"
+    bgnum = int(bgmax[0])
+    bgnum = bgnum + 1
+    name = f"bg{bgnum}"
+    await database.execute(
+        f"""
+        INSERT  INTO server_settings
+                (guild_id, name, value) 
+        VALUES  (:guild_id, :name, :value)
+        """,
+        {"guild_id": guild_id, "name": name, "value": value,},
+    )
+
+    await database.execute(
+        f"""
+        UPDATE  server_settings
+        SET     value = :value
+        WHERE   guild_id = :guild_id
+        AND     name = :name
+        """,
+        {"value": bgnum, "guild_id": guild_id, "name": custom_bg},
+    )
+
+async def delete_bg_image(bot, guild_id: int, interaction, bgmax:int, name:str) -> None:
+    """Deletes a background image from the db"""
+    database = bot.dislevel_database
+    custom_bg="custom_bg"
+    bgnum = int(bgmax[0])
+    bgnum = bgnum - 1
+
+    value = await database.fetch_one(
+        f"""
+        SELECT  value
+        FROM    server_settings
+        WHERE   name = :name
+        AND     guild_id = :guild_id
+        """,
+        {"guild_id": guild_id, "name": name},
+    )
+
+    if value == None:
+        await interaction.send(ephemeral=True, content=f"Background image does not exist")
+    else:
+
+        bgcheck = await database.fetch_one(
+            f"""
+            SELECT  name
+            FROM    server_settings
+            WHERE   value = :value
+            AND     guild_id = :guild_id
+            """,
+            {"guild_id": guild_id, "value": value[0]},
+        )
+
+        bgmaxname = f"bg{bgmax[0]}"
+        
+        maxvalue = await database.fetch_one(
+            f"""
+            SELECT  value
+            FROM    server_settings
+            WHERE   name = :name
+            AND     guild_id = :guild_id
+            """,
+            {"guild_id": guild_id, "name": bgmaxname},
+        )
+
+        bgcheck = str(bgcheck[0])
+        bgcheck = re.sub(r'bg',  '', f'{bgcheck}')
+
+        if bgcheck == bgmax[0]:
+            await database.execute(
+                f"""
+                UPDATE  server_settings
+                SET     value = :value
+                WHERE   guild_id = :guild_id
+                AND     name = :name
+                """,
+                {"value": bgnum, "guild_id": guild_id, "name": custom_bg},
+            )
+            await database.execute(
+                f"""
+                DELETE  FROM server_settings
+                WHERE   name = :name
+                AND     guild_id = :guild_id
+                """,
+                {"guild_id": guild_id, "name": name},
+            )
+        else:
+            bgname = f"bg{bgcheck}"
+
+            await database.execute(
+                f"""
+                UPDATE  server_settings
+                SET     value = :value
+                WHERE   guild_id = :guild_id
+                AND     name = :name
+                """,
+                {"value": bgnum, "guild_id": guild_id, "name": custom_bg},
+            )
+            await database.execute(
+                f"""
+                DELETE  FROM server_settings
+                WHERE   name = :name
+                AND     guild_id = :guild_id
+                """,
+                {"guild_id": guild_id, "name": name},
+            )
+
+            await database.execute(
+                f"""
+                UPDATE  server_settings
+                SET     name = :name
+                WHERE   guild_id = :guild_id
+                AND     value = :value
+                """,
+                {"value": maxvalue[0], "guild_id": guild_id, "name": bgname},
+            )    
+
+        await interaction.send(ephemeral=True, content=f"Background image has been removed")

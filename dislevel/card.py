@@ -9,7 +9,7 @@ URL_REGEX = re.compile(
     r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
 )
 
-def get_card(data, nick:str):
+def get_card(data, nick:str, bg:str):
     profile_image = load_image(data["profile_image"])
     profile = Editor(profile_image).resize((200, 200))
     overlay_state=(data["overlay"])
@@ -25,17 +25,13 @@ def get_card(data, nick:str):
     if tcolor3 == None:
         tcolor3 = "white"
 
-
     if data["bg_image"] and URL_REGEX.match(data["bg_image"]):
         try:
             bg_image = load_image(data["bg_image"])
         except Exception as e:
-            print("Hit this exception")
-            bgnum = random.randint(1,55)
-            bg_image = os.path.join(os.path.dirname(__file__), "assets", f"bg{bgnum}.png")
+            bg_image = load_image(bg)
     else:
-        bgnum = random.randint(1,55)
-        bg_image = os.path.join(os.path.dirname(__file__), "assets", f"bg{bgnum}.png")
+        bg_image = load_image(bg)
 
     background = Editor(bg_image).resize((800, 240), crop=True)
 
@@ -71,7 +67,7 @@ def get_card(data, nick:str):
         fontsl = 1
     else:
         fontsl = 0
-        
+
     if font == None:
         if fontsl == 1:
             font_40 = Font.msgothic(size=30, variant="bold")
@@ -221,7 +217,6 @@ def get_card(data, nick:str):
 
     background.text((250, 170), "LVL", font=font_25, color=f"{tcolor3}")
     background.text((310, 160), str(data["level"]), font=font_40_bold, color=f"{tcolor3}")
-
     background.rectangle((390, 170), 360, 25, outline=f"{tcolor3}", stroke_width=2)
     background.bar(
         (394, 174),
@@ -231,25 +226,17 @@ def get_card(data, nick:str):
         fill=f"{tcolor3}",
         stroke_width=2,
     )
-    #background.text(
-    #    (875, 42),
-    #    f'#{data["position"]}',
-    #    font=Font.montserrat(size=45),
-    #    color="#ffffff",  #changing this did nothing?
-    #    align="right",
-    #)
 
     background.text(
         (390, 135), f"Rank : {data['position']}", font=font_25, color=tcolor3
     )
     user_level=(data["level"])
-
+    
     min_xp = 0
     var_level = 0
     for i in range(0 , user_level):
-    
         min_xp = min_xp + (5*(var_level**2)+(50*var_level)+100)
-        var_level = var_level + 1 
+        var_level = var_level + 1
 
     xp=(data['xp'])
     display_xp = xp - min_xp

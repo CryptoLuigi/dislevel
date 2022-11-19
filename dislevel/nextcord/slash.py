@@ -1,5 +1,5 @@
 from re import M
-import nextcord
+import nextcord, random
 from math import ceil
 from typing import Optional, Union
 from easy_pil.utils import run_in_executor
@@ -8,7 +8,6 @@ from nextcord import Embed, File, Interaction, Member, slash_command, ButtonStyl
 from nextcord.ext import commands, application_checks
 from ..card import get_card
 from ..utils import (
-    get_leaderboard_data,
     get_member_data,
     get_member_position,
     set_bg_image,
@@ -19,6 +18,10 @@ from ..utils import (
     get_page,
     set_first_run,
     toggle_nick,
+    get_bg_data,
+    get_bg_value,
+    add_bg_image,
+    delete_bg_image,
 )
 
 botchannel = f'<#1029782845071294595>'
@@ -46,10 +49,16 @@ class LevelingSlash(commands.Cog):
                 user_data["name"] = str(member).split("#")[0]
                 user_data["descriminator"] = str(member).split("#")[1]
                 nick = member.nick
-                image = await run_in_executor(get_card, data=user_data, nick=nick)
+
+                bgmax = await get_bg_data(self.bot, interaction.guild.id)
+                bgmax = int(bgmax[0])
+                bgnum = random.randint(1, bgmax)
+                bg = await get_bg_value(bot=self.bot, guild_id=interaction.guild.id, bgnum=bgnum)
+                image = await run_in_executor(get_card, data=user_data, nick=nick, bg=bg[0])
+                
                 file = File(fp=image, filename="card.png")
 
-                Leaderboard = Button(label="Show the Leaderboard", style=nextcord.ButtonStyle.green, emoji="<:MyneSparkle:1018941182430154902>")
+                Leaderboard = Button(label="Show the Leaderboard", style=ButtonStyle.green, emoji="<:MyneSparkle:1018941182430154902>")
                 view2 = View(timeout=600)
                 view2.add_item(Leaderboard)
 
@@ -74,7 +83,12 @@ class LevelingSlash(commands.Cog):
                 user_data["name"] = str(member).split("#")[0]
                 user_data["descriminator"] = str(member).split("#")[1]
                 nick = member.nick
-                image = await run_in_executor(get_card, data=user_data, nick=nick)
+
+                bgmax = await get_bg_data(self.bot, interaction.guild.id)
+                bgmax = int(bgmax[0])
+                bgnum = random.randint(1, bgmax)
+                bg = await get_bg_value(bot=self.bot, guild_id=interaction.guild.id, bgnum=bgnum)
+                image = await run_in_executor(get_card, data=user_data, nick=nick, bg=bg[0])
                 file = File(fp=image, filename="card.png")
 
                 await interaction.send(file=file, ephemeral=True)
@@ -96,7 +110,6 @@ class LevelingSlash(commands.Cog):
                 user_data = await get_member_data(self.bot, member.id, interaction.guild.id)
                 first_run = 1
 
-            #print(member.id)
             mestiid=int(1027592830719377439)
             if member.id == mestiid:
                 await interaction.response.send_message(content=f"https://cdn.discordapp.com/attachments/1028883555713032234/1037415184072982528/card.png")            
@@ -109,10 +122,14 @@ class LevelingSlash(commands.Cog):
                 user_data["descriminator"] = str(member).split("#")[1]
 
                 nick = member.nick
-
-                image = await run_in_executor(get_card, data=user_data, nick=nick)
+                
+                bgmax = await get_bg_data(self.bot, interaction.guild.id)
+                bgmax = int(bgmax[0])
+                bgnum = random.randint(1, bgmax)
+                bg = await get_bg_value(bot=self.bot, guild_id=interaction.guild.id, bgnum=bgnum)
+                image = await run_in_executor(get_card, data=user_data, nick=nick, bg=bg[0])
                 file = File(fp=image, filename="card.png")
-                Leaderboard = Button(label="Show the Leaderboard", style=nextcord.ButtonStyle.green, emoji="<:MyneSparkle:1018941182430154902>")
+                Leaderboard = Button(label="Show the Leaderboard", style=ButtonStyle.green, emoji="<:MyneSparkle:1018941182430154902>")
                 view2 = View(timeout=600)
                 view2.add_item(Leaderboard)
 
@@ -127,7 +144,6 @@ class LevelingSlash(commands.Cog):
                 await interaction.send(file=file,view=view2)
 
 
-
             else:
                 user_data["position"] = await get_member_position(self.bot, member.id, interaction.guild.id)
                 user_data["profile_image"] = str(member.display_avatar.url)
@@ -136,7 +152,11 @@ class LevelingSlash(commands.Cog):
 
                 nick = member.nick
 
-                image = await run_in_executor(get_card, data=user_data, nick=nick)
+                bgmax = await get_bg_data(self.bot, interaction.guild.id)
+                bgmax = int(bgmax[0])
+                bgnum = random.randint(1, bgmax)
+                bg = await get_bg_value(bot=self.bot, guild_id=interaction.guild.id, bgnum=bgnum)
+                image = await run_in_executor(get_card, data=user_data, nick=nick, bg=bg[0])
                 file = File(fp=image, filename="card.png")
 
                 ShowButton = Button(label="Show me", style=nextcord.ButtonStyle.green, emoji="<:praisekami:946117405111898192>")
@@ -486,6 +506,21 @@ class LevelingSlash(commands.Cog):
         select.callback = my_callback
 
         await interaction.send(ephemeral=True, content=f"Choose font", view=view)
+
+    @slash_command(description="Add a bg to the db")
+    @application_checks.has_any_role("Aub", "Zent", "Giebe")
+    async def add_server_bg(self, interaction: Interaction, *, url: str):
+        """adds a background image to the server"""
+        bgmax = await get_bg_data(self.bot, interaction.guild.id)
+        await add_bg_image(self.bot, interaction.guild.id, bgmax, url)
+        await interaction.send(ephemeral=True, content=f"Background image h@pas been added")
+
+    @slash_command(description="Add a bg to the db")
+    @application_checks.has_any_role("Aub", "Zent", "Giebe")
+    async def remove_server_bg(self, interaction: Interaction, *, name: str):
+        """removes a background iamge from the server"""
+        bgmax = await get_bg_data(self.bot, interaction.guild.id)
+        await delete_bg_image(self.bot, interaction.guild.id, interaction, bgmax, name)
 
 def setup(bot: commands.Bot):
     bot.add_cog(LevelingSlash(bot))
