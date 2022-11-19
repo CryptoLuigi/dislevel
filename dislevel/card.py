@@ -1,5 +1,3 @@
-import os
-import random
 import re
 from easy_pil import Canvas, Editor, Font, load_image
 from numerize.numerize import numerize

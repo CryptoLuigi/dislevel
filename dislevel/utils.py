@@ -1,11 +1,11 @@
-from code import interact
-import re
+import re, random, os, nextcord
 from typing import List, Union
 from ._models import Field
-import os, nextcord
+from easy_pil.utils import run_in_executor
+from .card import get_card
 from math import ceil
 from nextcord.ui import View, Button
-from nextcord import Embed
+from nextcord import Embed, File, ButtonStyle
 
 leveling_table: str = None
 
@@ -406,9 +406,9 @@ async def set_text_font(bot, member_id: int, guild_id: str, font) -> None:
 
 async def get_page(bot, interaction, page:int) -> None:
     """See the server leaderboard"""
-    NextButton = Button(label="Next", style=nextcord.ButtonStyle.blurple, emoji="⏭")
-    PrevButton = Button(label="Previous", style=nextcord.ButtonStyle.blurple, emoji="⏮")
-    MyRank = Button(label="My Rank", style=nextcord.ButtonStyle.blurple, emoji="<:praisekami:946117405111898192>")
+    NextButton = Button(label="Next", style=ButtonStyle.blurple, emoji="⏭")
+    PrevButton = Button(label="Previous", style=ButtonStyle.blurple, emoji="⏮")
+    MyRank = Button(label="My Rank", style=ButtonStyle.blurple, emoji="<:praisekami:946117405111898192>")
     view = View(timeout=600)
     view.add_item(PrevButton)
     view.add_item(MyRank)
@@ -668,3 +668,109 @@ async def delete_bg_image(bot, guild_id: int, interaction, bgmax:int, name:str) 
             )    
 
         await interaction.send(ephemeral=True, content=f"Background image has been removed")
+
+async def get_rank(bot, interaction, member) -> None:
+    """Gets the rank card for a user"""
+
+    if not member:
+        member = interaction.user
+        user_data = await get_member_data(bot, member.id, interaction.guild.id)
+        first_run = user_data["first_run"]                 
+    else:
+        user_data = await get_member_data(bot, member.id, interaction.guild.id)
+        first_run = 1
+
+    mestiid=int(1027592830719377439)
+    if member.id == mestiid:
+        await interaction.response.send_message(content=f"https://cdn.discordapp.com/attachments/1028883555713032234/1037415184072982528/card.png")            
+
+    elif first_run == 1:
+
+        user_data["position"] = await get_member_position(bot, member.id, interaction.guild.id)
+        user_data["profile_image"] = str(member.display_avatar.url)
+        user_data["name"] = str(member).split("#")[0]
+        user_data["descriminator"] = str(member).split("#")[1]
+
+        nick = member.nick
+        
+        bgmax = await get_bg_data(bot, interaction.guild.id)
+        bgmax = int(bgmax[0])
+        bgnum = random.randint(1, bgmax)
+        bg = await get_bg_value(bot=bot, guild_id=interaction.guild.id, bgnum=bgnum)
+        image = await run_in_executor(get_card, data=user_data, nick=nick, bg=bg[0])
+        file = File(fp=image, filename="card.png")
+        Leaderboard = Button(label="Show the Leaderboard", style=ButtonStyle.green, emoji="<:MyneSparkle:1018941182430154902>")
+        view2 = View(timeout=600)
+        view2.add_item(Leaderboard)
+
+
+        async def leader_callback(interaction):
+            selfrank = await get_member_position(bot, interaction.user.id, interaction.guild.id)
+            await get_page(bot, interaction, page=ceil(selfrank/10))
+            print(f"Leaderboard Requested by {interaction.user.name}")
+
+        Leaderboard.callback = leader_callback
+
+        await interaction.send(file=file,view=view2)
+
+
+    else:
+        user_data["position"] = await get_member_position(bot, member.id, interaction.guild.id)
+        user_data["profile_image"] = str(member.display_avatar.url)
+        user_data["name"] = str(member).split("#")[0]
+        user_data["descriminator"] = str(member).split("#")[1]
+
+        nick = member.nick
+
+        bgmax = await get_bg_data(bot, interaction.guild.id)
+        bgmax = int(bgmax[0])
+        bgnum = random.randint(1, bgmax)
+        bg = await get_bg_value(bot=bot, guild_id=interaction.guild.id, bgnum=bgnum)
+        image = await run_in_executor(get_card, data=user_data, nick=nick, bg=bg[0])
+        file = File(fp=image, filename="card.png")
+
+        ShowButton = Button(label="Show me", style=ButtonStyle.green, emoji="<:praisekami:946117405111898192>")
+        Leaderboard = Button(label="Show the Leaderboard", style=ButtonStyle.green, emoji="<:MyneSparkle:1018941182430154902>")
+        view = View(timeout=600)
+        view2 = View(timeout=600)
+        view.add_item(ShowButton)
+        view2.add_item(Leaderboard)
+
+        async def button_callback(interaction):
+            ccommands='''        
+            </setfont:0> Set the font via dropdown menu.
+
+            </overlay:0> - Turn off/on the overlay on the rank card.
+
+            </overlay_on:0> - Turn on the overlay on the rank card.
+
+            </setbg:0> `url` - Allow changing the background image of your rank card.
+            `url` - The link of the background image.
+
+            </setcolor:0> `color1` `color2` `color3` - Allow changing the colors of your rank card (Requires hex color value).
+            `color1` - The color of your username.
+            `color2` - The color of your discriminator(Discord tag).
+            `color3` - The color of your progress bar.
+
+            </resetbg:0> - Resets your custom rank card background image to default.
+
+            </resetcolor:0> - Resets custom colors on your rank card to default.
+
+            '''
+            embed=Embed(title="Help", description="This is the list of commands for <@1029559354673868801>.",color=0x006bb1)
+            embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1029266425862434846/1030948597547663420/80b67817a5b119041027ce242452026a.png?size=4096")
+            embed.add_field(name="Customization Commands:", value=f"{ccommands}", inline=False)
+
+            await interaction.send(ephemeral=True, embed=embed)                    
+        
+        async def leader_callback(interaction):
+            selfrank = await get_member_position(bot, interaction.user.id, interaction.guild.id)
+            page = ceil(selfrank/10)
+            await get_page(bot, interaction, page)
+            print(f"Leaderboard Requested by {interaction.user.name}")
+
+        Leaderboard.callback = leader_callback
+        ShowButton.callback = button_callback
+        await set_first_run(bot, member.id, interaction.guild.id)
+        await interaction.send(file=file, view=view2)
+        await interaction.send(ephemeral=True, content="This is your first time seeing your rank card.\nWould you like to see how to customize your card?\n" , view=view)
