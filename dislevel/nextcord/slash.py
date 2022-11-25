@@ -1,24 +1,9 @@
-import nextcord
 from typing import Optional, Union
 from nextcord.ui import View, Button, Select
-from nextcord import Interaction, Member, slash_command, ButtonStyle, user_command, SlashOption
+from nextcord import Interaction, Member, slash_command, ButtonStyle, user_command, SlashOption, SelectOption, utils
 from nextcord.ext import commands, application_checks
-from ..utils import (
-    set_bg_image,
-    set_text_color,
-    toggle_overlay,
-    reset_rank,
-    set_text_font,
-    get_page,
-    toggle_nick,
-    get_bg_data,
-    add_bg_image,
-    delete_bg_image,
-    get_rank,
-)
+from ..utils import *
 
-botchannel = f'<#1029782845071294595>'
-  
 class LevelingSlash(commands.Cog):
     """Leveling commands"""
 
@@ -28,35 +13,39 @@ class LevelingSlash(commands.Cog):
     @user_command(name="Rank User")
     async def rank_user(self, interaction: Interaction, member: Member):
         """Check rank of a user"""
+        botchannel = await get_setting(self.bot, interaction.guild_id, name="botchannel")
         try:
             current_channel = f"{interaction.channel}"
-            if current_channel == f'bots' or current_channel == f'bot-development'or current_channel ==f'🐍-bots':
+            if current_channel == botchannel:
                 await get_rank(self.bot, interaction, member)
             else:
-                await interaction.response.send_message(ephemeral=True, content=f"{interaction.user.mention} This can only be used in {botchannel}")
+                await interaction.response.send_message(ephemeral=True, content=f"{interaction.user.mention} This can only be used in <#{botchannel[0]}>")
         except:
             await interaction.response.send_message(content=f"{interaction.user.mention} That user is unranked or a bot.")
 
     @slash_command(description="Check rank of a user")
     async def rank(self, interaction: Interaction, *, member: Optional[Member]):
         """Check rank of a user"""
+        botchannel = await get_setting(self.bot, interaction.guild_id, name="botchannel")
         try:
             current_channel = f"{interaction.channel}"
-            if current_channel == f'bots' or current_channel == f'bot-development'or current_channel ==f'🐍-bots':
+            if current_channel == botchannel:
                 await get_rank(self.bot, interaction, member)
             else:
-                await interaction.response.send_message(ephemeral=True, content=f"{interaction.user.mention} This can only be used in {botchannel}")
+                await interaction.response.send_message(ephemeral=True, content=f"{interaction.user.mention} This can only be used in <#{botchannel[0]}>")
         except:
             await interaction.response.send_message(content=f"{interaction.user.mention} That user is unranked or a bot.")
 
     @slash_command(description="See the server leaderboard")
     async def leaderboard(self, interaction: Interaction, page:Optional[int]):
         """See the server leaderboard"""
+        botchannel = await get_setting(self.bot, interaction.guild_id, name="botchannel")
         current_channel = f"{interaction.channel}"
-        if current_channel == f'bots' or current_channel == f'bot-development'or current_channel ==f'🐍-bots':
+        if current_channel == botchannel:
             await get_page(self.bot, interaction, page)
+            print(f"Leaderboard Requested by {interaction.user.name}")
         else:
-            await interaction.response.send_message(ephemeral=True, content=f"{interaction.user.mention} This can only be used in {botchannel}")
+            await interaction.response.send_message(ephemeral=True, content=f"{interaction.user.mention} This can only be used in <#{botchannel[0]}>")
 
     @slash_command(description="Set image of your card bg")
     async def setbg(self, interaction: Interaction, *, url: str):
@@ -94,26 +83,20 @@ class LevelingSlash(commands.Cog):
         await set_text_color(self.bot, interaction.user.id, interaction.guild.id, color=f"white", color2=f"grey", color3=f"white")
         await interaction.send(ephemeral=True, content=f"Text color has been set to default")
 
-    @slash_command(description="Reset the color text of your rank card")
-    async def resetcolor(self, interaction: Interaction):
-        """Reset color of your card bg"""
-        await set_text_color(self.bot, interaction.user.id, interaction.guild.id, color=f"white", color2=f"grey", color3=f"white")
-        await interaction.send(ephemeral=True, content=f"Text color has been set to default")
-
     @slash_command(description="Reset your rank card")
     async def resetrank(self, interaction: Interaction):
         button_yes1 = Button(label="Yes", style=ButtonStyle.red)
         guild = self.bot.get_guild(interaction.guild.id)
         member = guild.get_member(interaction.user.id)
-        role_lvl5 = nextcord.utils.get(guild.roles, name="Farmer (level 5)")
-        role_lvl10 = nextcord.utils.get(guild.roles, name="Soldier (level 10)")
-        role_lvl15 = nextcord.utils.get(guild.roles, name="Craftsman (level 15)")
-        role_lvl20 = nextcord.utils.get(guild.roles, name="Merchant (level 20)")
-        role_lvl25 = nextcord.utils.get(guild.roles, name="Shrine Maiden (level 25)")
-        role_lvl30 = nextcord.utils.get(guild.roles, name="Noble (level 30)")
-        role_lvl40 = nextcord.utils.get(guild.roles, name="Aub (level 40)")
-        role_lvl50 = nextcord.utils.get(guild.roles, name="Zent (level 50)")
-        role_lvl60 = nextcord.utils.get(guild.roles, name="Goddess (level 60)")
+        role_lvl5 = utils.get(guild.roles, name="Farmer (level 5)")
+        role_lvl10 = utils.get(guild.roles, name="Soldier (level 10)")
+        role_lvl15 = utils.get(guild.roles, name="Craftsman (level 15)")
+        role_lvl20 = utils.get(guild.roles, name="Merchant (level 20)")
+        role_lvl25 = utils.get(guild.roles, name="Shrine Maiden (level 25)")
+        role_lvl30 = utils.get(guild.roles, name="Noble (level 30)")
+        role_lvl40 = utils.get(guild.roles, name="Aub (level 40)")
+        role_lvl50 = utils.get(guild.roles, name="Zent (level 50)")
+        role_lvl60 = utils.get(guild.roles, name="Goddess (level 60)")
 
         async def areyousure(ctx):
             button_yes2 = Button(label="Yes I am sure", style=ButtonStyle.red)
@@ -134,7 +117,7 @@ class LevelingSlash(commands.Cog):
             button_yes2.callback = resetxp
             warnview2 = View (timeout=180)
             warnview2.add_item(button_yes2)
-            embed2=nextcord.Embed(title="Reset Rank", description="Are you **really** sure you want to reset your rank?\nLost XP and level cannot recovered afterwards.\nPress \"Yes\" if you want to proceed.\n",color=0x99c1f1)
+            embed2=Embed(title="Reset Rank", description="Are you **really** sure you want to reset your rank?\nLost XP and level cannot recovered afterwards.\nPress \"Yes\" if you want to proceed.\n",color=0x99c1f1)
 
             await ctx.response.send_message(embed=embed2, view=warnview2, ephemeral=True)
 
@@ -143,7 +126,7 @@ class LevelingSlash(commands.Cog):
         warnview1 = View(timeout=180)
         warnview1.add_item(button_yes1)
 
-        embed1=nextcord.Embed(title="Reset Rank", description="Are you sure you want to reset your rank?\nPress \"Yes\" if you want to proceed.\n",color=0x99c1f1)
+        embed1=Embed(title="Reset Rank", description="Are you sure you want to reset your rank?\nPress \"Yes\" if you want to proceed.\n",color=0x99c1f1)
 
         await interaction.response.send_message(embed=embed1, view=warnview1, ephemeral=True)
 
@@ -160,15 +143,15 @@ class LevelingSlash(commands.Cog):
         button_yes1 = Button(label="Yes", style=ButtonStyle.red)
         guild = self.bot.get_guild(interaction.guild.id)
         member = guild.get_member(interaction.user.id)
-        role_lvl5 = nextcord.utils.get(guild.roles, name="Farmer (level 5)")
-        role_lvl10 = nextcord.utils.get(guild.roles, name="Soldier (level 10)")
-        role_lvl15 = nextcord.utils.get(guild.roles, name="Craftsman (level 15)")
-        role_lvl20 = nextcord.utils.get(guild.roles, name="Merchant (level 20)")
-        role_lvl25 = nextcord.utils.get(guild.roles, name="Shrine Maiden (level 25)")
-        role_lvl30 = nextcord.utils.get(guild.roles, name="Noble (level 30)")
-        role_lvl40 = nextcord.utils.get(guild.roles, name="Aub (level 40)")
-        role_lvl50 = nextcord.utils.get(guild.roles, name="Zent (level 50)")
-        role_lvl60 = nextcord.utils.get(guild.roles, name="Goddess (level 60)")
+        role_lvl5 = utils.get(guild.roles, name="Farmer (level 5)")
+        role_lvl10 = utils.get(guild.roles, name="Soldier (level 10)")
+        role_lvl15 = utils.get(guild.roles, name="Craftsman (level 15)")
+        role_lvl20 = utils.get(guild.roles, name="Merchant (level 20)")
+        role_lvl25 = utils.get(guild.roles, name="Shrine Maiden (level 25)")
+        role_lvl30 = utils.get(guild.roles, name="Noble (level 30)")
+        role_lvl40 = utils.get(guild.roles, name="Aub (level 40)")
+        role_lvl50 = utils.get(guild.roles, name="Zent (level 50)")
+        role_lvl60 = utils.get(guild.roles, name="Goddess (level 60)")
         async def areyousure(ctx):
             button_yes2 = Button(label="Yes I am sure", style=ButtonStyle.red)
 
@@ -188,7 +171,7 @@ class LevelingSlash(commands.Cog):
             button_yes2.callback = resetxp
             warnview2 = View (timeout=180)
             warnview2.add_item(button_yes2)
-            embed2=nextcord.Embed(title="Reset Rank", description=f"Are you **really** sure you want to reset {member.mention}'s rank?",color=0x99c1f1)
+            embed2=Embed(title="Reset Rank", description=f"Are you **really** sure you want to reset {member.mention}'s rank?",color=0x99c1f1)
 
             await ctx.response.send_message(embed=embed2, view=warnview2, ephemeral=True)
 
@@ -197,7 +180,7 @@ class LevelingSlash(commands.Cog):
         warnview1 = View(timeout=180)
         warnview1.add_item(button_yes1)
 
-        embed1=nextcord.Embed(title="Reset Rank", description=f"Are you sure you want to reset {member.mention}'s rank?",color=0x99c1f1)
+        embed1=Embed(title="Reset Rank", description=f"Are you sure you want to reset {member.mention}'s rank?",color=0x99c1f1)
 
         await interaction.response.send_message(embed=embed1, view=warnview1, ephemeral=True)
 
@@ -246,7 +229,7 @@ class LevelingSlash(commands.Cog):
         `member` - User to reset their rank.
         '''
 
-        embed=nextcord.Embed(title="Help", description="This is the list of commands for <@1029559354673868801>.",color=0x006bb1)
+        embed=Embed(title="Help", description="This is the list of commands for <@1029559354673868801>.",color=0x006bb1)
         embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1029266425862434846/1030948597547663420/80b67817a5b119041027ce242452026a.png?size=4096")
         embed.add_field(name="Rank Commands:", value=f"{rcommands}", inline=False)
         embed.add_field(name="Customization Commands:", value=f"{ccommands}", inline=False)
@@ -259,21 +242,21 @@ class LevelingSlash(commands.Cog):
         """Set font of the text of your rank card"""
 
         select = Select(options=[
-            nextcord.SelectOption(label="1: MS Gothic", value="1"),
-            nextcord.SelectOption(label="2: Arial", value="2"),
-            nextcord.SelectOption(label="3: Caveat", value="3"),
-            nextcord.SelectOption(label="4: Montserrat", value="4"),
-            nextcord.SelectOption(label="5: Noto Sans", value="5"),
-            nextcord.SelectOption(label="6: Old English", value="6"),
-            nextcord.SelectOption(label="7: Pristina", value="7"),
-            nextcord.SelectOption(label="8: Poppins", value="8"),
-            nextcord.SelectOption(label="9: Redressed", value="9"),
-            nextcord.SelectOption(label="10: NotoSans JP", value="10"),
-            nextcord.SelectOption(label="11: NotoSerif", value="11"),
-            nextcord.SelectOption(label="12: Roboto", value="12"),
-            nextcord.SelectOption(label="13: NotoSerif JP", value="13"),
-            nextcord.SelectOption(label="14: Juergen Manuscript", value="14"),
-            nextcord.SelectOption(label="15: Juergen Stylo", value="15")
+            SelectOption(label="1: MS Gothic", value="1"),
+            SelectOption(label="2: Arial", value="2"),
+            SelectOption(label="3: Caveat", value="3"),
+            SelectOption(label="4: Montserrat", value="4"),
+            SelectOption(label="5: Noto Sans", value="5"),
+            SelectOption(label="6: Old English", value="6"),
+            SelectOption(label="7: Pristina", value="7"),
+            SelectOption(label="8: Poppins", value="8"),
+            SelectOption(label="9: Redressed", value="9"),
+            SelectOption(label="10: NotoSans JP", value="10"),
+            SelectOption(label="11: NotoSerif", value="11"),
+            SelectOption(label="12: Roboto", value="12"),
+            SelectOption(label="13: NotoSerif JP", value="13"),
+            SelectOption(label="14: Juergen Manuscript", value="14"),
+            SelectOption(label="15: Juergen Stylo", value="15")
         ])
         
         view = View(timeout=360)
@@ -350,7 +333,7 @@ class LevelingSlash(commands.Cog):
         """adds a background image to the server"""
         bgmax = await get_bg_data(self.bot, interaction.guild.id)
         await add_bg_image(self.bot, interaction.guild.id, bgmax, url)
-        await interaction.send(ephemeral=True, content=f"Background image h@pas been added")
+        await interaction.send(ephemeral=True, content=f"Background image has been added")
 
     @slash_command(description="Add a bg to the db")
     @application_checks.has_any_role("Aub", "Zent", "Giebe")
@@ -358,6 +341,7 @@ class LevelingSlash(commands.Cog):
         """removes a background iamge from the server"""
         bgmax = await get_bg_data(self.bot, interaction.guild.id)
         await delete_bg_image(self.bot, interaction.guild.id, interaction, bgmax, name)
+        await interaction.send(ephemeral=True, content=f"Background image has been deleted")
 
 def setup(bot: commands.Bot):
     bot.add_cog(LevelingSlash(bot))

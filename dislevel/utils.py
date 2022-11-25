@@ -1,8 +1,9 @@
-import re, random, os, nextcord
+import re, random, os
 from typing import List, Union
 from ._models import Field
 from easy_pil.utils import run_in_executor
 from .card import get_card
+from .minicard import get_leadercard
 from math import ceil
 from nextcord.ui import View, Button
 from nextcord import Embed, File, ButtonStyle
@@ -414,7 +415,6 @@ async def get_page(bot, interaction, page:int) -> None:
     view.add_item(MyRank)
     view.add_item(NextButton)
 
-    print(f"Leaderboard Requested by {interaction.user.name}")
     leaderboard_data = await get_leaderboard_data(bot, interaction.guild.id)
 
     selfrank = 0
@@ -425,8 +425,12 @@ async def get_page(bot, interaction, page:int) -> None:
             member = interaction.guild.get_member(data["member_id"])
         else:
             member = await interaction.guild.fetch_member(data["member_id"])
-        if member == interaction.user:
-            selfrank = position
+        try:
+            if member == interaction.user:
+                selfrank = position
+        except:
+            if member == interaction.author:
+                selfrank = position
         position += 1
 
     leaderboard_content = f"This is the {interaction.guild} server's leaderboard.\n\nYou are ranked `{selfrank}`.\n\n"
@@ -438,7 +442,10 @@ async def get_page(bot, interaction, page:int) -> None:
     elif page > last_page:
         page = last_page
 
-    caller = interaction.user
+    try:
+        caller = interaction.user
+    except:
+        caller = interaction.author
 
     async def button_callback(interaction):
         if interaction.user == caller:
@@ -462,10 +469,19 @@ async def get_page(bot, interaction, page:int) -> None:
     PrevButton.callback = button_callback2
     MyRank.callback = button_callback3
 
+    bgmax = await get_bg_data(bot, interaction.guild.id)
+    bgmax = int(bgmax[0])
+
+    leaderboard_image_data = dict()
+
+    await interaction.response.defer()
+
     position = 0
     for data in leaderboard_data[(((page*10)-10)):(10+((page*10)-10))]:
+            bgnum = random.randint(1, bgmax)
             memberid = data['member_id']
             guild = bot.get_guild(interaction.guild.id)
+
             try:
                 member = await guild.fetch_member(memberid)
             except:
@@ -475,19 +491,30 @@ async def get_page(bot, interaction, page:int) -> None:
                 if member.nick == f'None' or member.nick == None:
                     user = bot.get_user(data["member_id"])
                     user = re.sub(r'#(.?)(.?)(.?)(.?)', '', f'{user}')
-                    leaderboard_content += f"{(position+((page*10)-10))}.  **{user}**  - {data['xp']} xp   -  **lvl  {data['level']}**\n"
+                    leaderboard_image_data[f"username_{position}"] = user
                 else:
-                    leaderboard_content += f"{(position+((page*10)-10))}.  **{member.nick}**  - {data['xp']} xp   -  **lvl  {data['level']}**\n"
+                    leaderboard_image_data[f"username_{position}"] = member.nick     
             except:
-                    leaderboard_content += f"{(position+((page*10)-10))}.  **{memberid}**  - {data['xp']} xp   -  **lvl  {data['level']}**\n"
+                    leaderboard_image_data[f"username_{position}"] = memberid
 
-    embed = Embed(title=f"Leaderboard", description=f"{leaderboard_content}",color=0x006bb1)
+            bg = await get_bg_value(bot=bot, guild_id=interaction.guild.id, bgnum=bgnum)
+            leaderboard_image_data[f"position_{position}"] = position+((page*10)-10)
+            leaderboard_image_data[f"bg_{position}"] = await get_bg_value(bot=bot, guild_id=interaction.guild.id, bgnum=bgnum)         
+            leaderboard_image_data[f"profile_image_{position}"] = str(member.display_avatar.url)
+            leaderboard_image_data[f"xp_{position}"] = data['xp']
+            leaderboard_image_data[f"level_{position}"] = data['level']
+            leaderboard_image_data[f"position_{position}"] = await get_member_position(bot, memberid, interaction.guild.id)
+
+    image = await run_in_executor(get_leadercard, data=leaderboard_image_data, nick=member.nick, bg=bg[0])
+    file = File(fp=image, filename="card.png")
+    embed = Embed(title=f"Leaderboard", description=f"{leaderboard_content}", color=0x006bb1)
+    embed.set_image(url="attachment://card.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1029266425862434846/1030948597547663420/80b67817a5b119041027ce242452026a.png?size=4096")
     embed.set_footer(text=f"{interaction.guild} Page ({page}/{last_page})", icon_url = interaction.guild.icon)
     try:
-        await interaction.response.edit_message(embed=embed, view=view)
+        await interaction.message.edit(file=file,embed=embed, view=view)
     except:
-        await interaction.response.send_message(embed=embed, view=view)
+        await interaction.send(file=file, embed=embed, view=view)
 
 async def set_first_run(bot, member_id: int, guild_id: int) -> None:
     """Set first run"""
@@ -690,14 +717,12 @@ async def get_rank(bot, interaction, member) -> None:
         user_data["profile_image"] = str(member.display_avatar.url)
         user_data["name"] = str(member).split("#")[0]
         user_data["descriminator"] = str(member).split("#")[1]
-
-        nick = member.nick
         
         bgmax = await get_bg_data(bot, interaction.guild.id)
         bgmax = int(bgmax[0])
         bgnum = random.randint(1, bgmax)
         bg = await get_bg_value(bot=bot, guild_id=interaction.guild.id, bgnum=bgnum)
-        image = await run_in_executor(get_card, data=user_data, nick=nick, bg=bg[0])
+        image = await run_in_executor(get_card, data=user_data, nick=member.nick, bg=bg[0])
         file = File(fp=image, filename="card.png")
         Leaderboard = Button(label="Show the Leaderboard", style=ButtonStyle.green, emoji="<:MyneSparkle:1018941182430154902>")
         view2 = View(timeout=600)
@@ -720,13 +745,11 @@ async def get_rank(bot, interaction, member) -> None:
         user_data["name"] = str(member).split("#")[0]
         user_data["descriminator"] = str(member).split("#")[1]
 
-        nick = member.nick
-
         bgmax = await get_bg_data(bot, interaction.guild.id)
         bgmax = int(bgmax[0])
         bgnum = random.randint(1, bgmax)
         bg = await get_bg_value(bot=bot, guild_id=interaction.guild.id, bgnum=bgnum)
-        image = await run_in_executor(get_card, data=user_data, nick=nick, bg=bg[0])
+        image = await run_in_executor(get_card, data=user_data, nick=member.nick, bg=bg[0])
         file = File(fp=image, filename="card.png")
 
         ShowButton = Button(label="Show me", style=ButtonStyle.green, emoji="<:praisekami:946117405111898192>")
@@ -774,3 +797,22 @@ async def get_rank(bot, interaction, member) -> None:
         await set_first_run(bot, member.id, interaction.guild.id)
         await interaction.send(file=file, view=view2)
         await interaction.send(ephemeral=True, content="This is your first time seeing your rank card.\nWould you like to see how to customize your card?\n" , view=view)
+
+async def get_setting(bot, guild_id: int, name) -> None:
+    """Returns data number of custom bgs"""
+    database = bot.dislevel_database
+
+    data = await database.fetch_one(
+        f"""
+        SELECT  value 
+        FROM    server_settings 
+        WHERE   guild_id = :guild_id 
+        AND     name = :name
+        """,
+        {"guild_id": guild_id, "name": name},
+    )
+
+    if not data:
+        return None
+
+    return data
