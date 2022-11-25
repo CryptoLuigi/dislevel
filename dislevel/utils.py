@@ -505,11 +505,11 @@ async def get_page(bot, interaction, page:int) -> None:
             leaderboard_image_data[f"level_{position}"] = data['level']
             leaderboard_image_data[f"position_{position}"] = await get_member_position(bot, memberid, interaction.guild.id)
 
-    image = await run_in_executor(get_leadercard, data=leaderboard_image_data, nick=member.nick, bg=bg[0])
+    image = await run_in_executor(get_leadercard, data=leaderboard_image_data, bg=bg[0])
     file = File(fp=image, filename="card.png")
     embed = Embed(title=f"Leaderboard", description=f"{leaderboard_content}", color=0x006bb1)
     embed.set_image(url="attachment://card.png")
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1029266425862434846/1030948597547663420/80b67817a5b119041027ce242452026a.png?size=4096")
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1029266425862434846/1030948597547663420/80b67817a5b119041027ce242452026a.png")
     embed.set_footer(text=f"{interaction.guild} Page ({page}/{last_page})", icon_url = interaction.guild.icon)
     try:
         await interaction.message.edit(file=file,embed=embed, view=view)

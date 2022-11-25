@@ -15,8 +15,8 @@ class LevelingSlash(commands.Cog):
         """Check rank of a user"""
         botchannel = await get_setting(self.bot, interaction.guild_id, name="botchannel")
         try:
-            current_channel = f"{interaction.channel}"
-            if current_channel == botchannel:
+            current_channel = interaction.channel.id
+            if current_channel == int(botchannel[0]):
                 await get_rank(self.bot, interaction, member)
             else:
                 await interaction.response.send_message(ephemeral=True, content=f"{interaction.user.mention} This can only be used in <#{botchannel[0]}>")
@@ -28,8 +28,8 @@ class LevelingSlash(commands.Cog):
         """Check rank of a user"""
         botchannel = await get_setting(self.bot, interaction.guild_id, name="botchannel")
         try:
-            current_channel = f"{interaction.channel}"
-            if current_channel == botchannel:
+            current_channel = interaction.channel.id
+            if current_channel == int(botchannel[0]):
                 await get_rank(self.bot, interaction, member)
             else:
                 await interaction.response.send_message(ephemeral=True, content=f"{interaction.user.mention} This can only be used in <#{botchannel[0]}>")
@@ -40,8 +40,8 @@ class LevelingSlash(commands.Cog):
     async def leaderboard(self, interaction: Interaction, page:Optional[int]):
         """See the server leaderboard"""
         botchannel = await get_setting(self.bot, interaction.guild_id, name="botchannel")
-        current_channel = f"{interaction.channel}"
-        if current_channel == botchannel:
+        current_channel = interaction.channel.id
+        if current_channel == int(botchannel[0]):
             await get_page(self.bot, interaction, page)
             print(f"Leaderboard Requested by {interaction.user.name}")
         else:
