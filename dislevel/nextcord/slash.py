@@ -1,8 +1,11 @@
 from typing import Optional, Union
-from nextcord.ui import View, Button, Select
-from nextcord import Interaction, Member, slash_command, ButtonStyle, user_command, SlashOption, SelectOption, utils
+from nextcord.ui import View, Button, Select, TextInput, Modal
+from nextcord import Interaction, Member, slash_command, ButtonStyle, user_command, SlashOption, SelectOption, utils, File, TextInputStyle
 from nextcord.ext import commands, application_checks
+from ..mee6_export import get_mee6_data
 from ..utils import *
+from databases import Database
+from dislevel import init_dislevel
 
 class LevelingSlash(commands.Cog):
     """Leveling commands"""
@@ -342,6 +345,23 @@ class LevelingSlash(commands.Cog):
         bgmax = await get_bg_data(self.bot, interaction.guild.id)
         await delete_bg_image(self.bot, interaction.guild.id, interaction, bgmax, name)
         await interaction.send(ephemeral=True, content=f"Background image has been deleted")
+
+    @slash_command(description="Emport DB")
+    @application_checks.has_any_role("Aub", "Zent", "Giebe")
+    async def ex_mee6(self, interaction: Interaction, *, server_id: Optional[str]):
+        """removes a background iamge from the server"""
+        await interaction.response.defer()
+        await get_mee6_data(interaction, server_id)
+        await interaction.send(file=File(f"{interaction.guild.id}_leaderboard_full_out.txt"))
+   
+    @slash_command(description="Emport DB")
+    @application_checks.has_any_role("Aub", "Zent", "Giebe")
+    async def setup(self, interaction: Interaction):
+        """removes a background iamge from the server"""
+        db = Database(f"sqlite:///{interaction.guild.id}_leveling.db")
+        await db.connect()
+        await init_dislevel(self, db, f"{interaction.guild.id}_leveling")
+        await interaction.send("db created")
 
 def setup(bot: commands.Bot):
     bot.add_cog(LevelingSlash(bot))

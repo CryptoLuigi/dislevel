@@ -407,6 +407,7 @@ async def set_text_font(bot, member_id: int, guild_id: str, font) -> None:
 
 async def get_page(bot, interaction, page:int) -> None:
     """See the server leaderboard"""
+    await interaction.response.defer()
     NextButton = Button(label="Next", style=ButtonStyle.blurple, emoji="⏭")
     PrevButton = Button(label="Previous", style=ButtonStyle.blurple, emoji="⏮")
     MyRank = Button(label="My Rank", style=ButtonStyle.blurple, emoji="<:praisekami:946117405111898192>")
@@ -473,8 +474,6 @@ async def get_page(bot, interaction, page:int) -> None:
     bgmax = int(bgmax[0])
 
     leaderboard_image_data = dict()
-
-    await interaction.response.defer()
 
     position = 0
     for data in leaderboard_data[(((page*10)-10)):(10+((page*10)-10))]:
@@ -816,3 +815,16 @@ async def get_setting(bot, guild_id: int, name) -> None:
         return None
 
     return data
+
+async def set_setting(bot, guild_id: int, name, value:str) -> None:
+    """Returns data number of custom bgs"""
+    database = bot.dislevel_database
+
+    await database.execute(
+        f"""
+        INSERT  INTO server_settings
+                (guild_id, name, value) 
+        VALUES  (:guild_id, :name, :value)
+        """,
+        {"guild_id": guild_id, "name": name, "value": value,},
+    )
