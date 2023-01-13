@@ -1,3 +1,4 @@
+import re
 from typing import Optional, Union
 from nextcord.ui import View, Button, Select, TextInput, Modal
 from nextcord import Interaction, Member, slash_command, ButtonStyle, user_command, SlashOption, SelectOption, utils, File, TextInputStyle
@@ -65,8 +66,24 @@ class LevelingSlash(commands.Cog):
     @slash_command(description="Set text color of your name in your rank card")
     async def setcolor(self, interaction: Interaction, *, color: str, color2: str, color3: str):
         """Set color of the text of your rank card"""
-        await set_text_color(self.bot, interaction.user.id, interaction.guild.id, color, color2, color3)
-        await interaction.send(ephemeral=True, content=f"Text color has been updated")
+        COLOR_REGEX = re.compile(r"#[0-9a-bA-F]{3,8}")
+        if (color and COLOR_REGEX.match(color)) and (color2 and COLOR_REGEX.match(color2)) and (color3 and COLOR_REGEX.match(color3)):
+            color_valid = False
+            color2_valid = False
+            color3_valid = False
+            if len(color) == 4 or len(color) == 7 or len(color) == 9:
+                color_valid = True
+            if len(color2) == 4 or len(color2) == 7 or len(color2) == 9:
+                color2_valid = True
+            if len(color3) == 4 or len(color3) == 7 or len(color3) == 9:
+                color2_valid = True
+            if color_valid and color2_valid and color3_valid:
+                await set_text_color(self.bot, interaction.user.id, interaction.guild.id, color, color2, color3)
+                await interaction.send(ephemeral=True, content=f"Text color has been updated")
+            else:
+                await interaction.send(ephemeral=True, content="Inputted colors are invalid, colors must be valid HEX color code.")
+        else:
+            await interaction.send(ephemeral=True, content="Inputted colors are invalid, colors must be valid HEX color code.") 
 
     @slash_command(description="Toggle the overlay in your rank card(Default:On)")
     async def overlay(self, interaction: Interaction, toggle:int=SlashOption(name="toggle", choices={"On":1,"Off":0})):
