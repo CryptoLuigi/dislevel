@@ -3,12 +3,18 @@ from typing import Union, Optional
 
 from discord import Embed, File, Member, Interaction
 from discord.ext import commands
+import nextcord
 from easy_pil.utils import run_in_executor
 
 from .card import get_card
 from .utils import *
 
-botchannel = f'<#1029782845071294595>'
+botchannel = f'<#638020706935767100>'
+bot_channel_id = 638020706935767100
+
+def is_bot_channel(channel: nextcord.TextChannel):
+    return  channel.id == bot_channel_id or str(channel) in ["bots", "🐍-bots"]
+
 
 class Leveling(commands.Cog):
     """Leveling commands"""
@@ -22,8 +28,7 @@ class Leveling(commands.Cog):
         if member == None:
             member = ctx.author
         try:
-            current_channel = f"{ctx.channel}"
-            if current_channel == f'bots' or current_channel == f'bot-development'or current_channel ==f'🐍-bots':
+            if is_bot_channel(ctx.channel):
                 await get_rank(self.bot, ctx, member)
         except:
             await ctx.send(content=f"{ctx.author.mention} That user is unranked or a bot.")
@@ -31,8 +36,7 @@ class Leveling(commands.Cog):
     @commands.command(aliases=["lb"])
     async def leaderboard(self, interaction: Interaction, page:Optional[int]):
         """See the server leaderboard"""
-        current_channel = f"{interaction.channel}"
-        if current_channel == f'bots' or current_channel == f'bot-development'or current_channel ==f'🐍-bots':
+        if is_bot_channel(interaction.channel):
             await get_page(self.bot, interaction, page)
             print(f"Leaderboard Requested by {interaction.author}")
 

@@ -7,6 +7,20 @@ from ..utils import *
 from databases import Database
 from dislevel import init_dislevel
 
+level_roles = [
+    (5, "Farmer (level 5)"),
+    (10, "Soldier (level 10)"),
+    (15, "Craftsman (level 15)"),
+    (20, "Merchant (level 20)"),
+    (25, "Mayor (level 25)"),
+    (30, "Shrine Maiden (level 30)"),
+    (35, "Noble (level 35)"),
+    (40, "Aub (level 40)"),
+    (50, "Zent (level 50)"),
+    (60, "Goddess (level 60)"),
+]
+
+
 class LevelingSlash(commands.Cog):
     """Leveling commands"""
 
@@ -91,15 +105,6 @@ class LevelingSlash(commands.Cog):
         button_yes1 = Button(label="Yes", style=ButtonStyle.red)
         guild = self.bot.get_guild(interaction.guild.id)
         member = guild.get_member(interaction.user.id)
-        role_lvl5 = utils.get(guild.roles, name="Farmer (level 5)")
-        role_lvl10 = utils.get(guild.roles, name="Soldier (level 10)")
-        role_lvl15 = utils.get(guild.roles, name="Craftsman (level 15)")
-        role_lvl20 = utils.get(guild.roles, name="Merchant (level 20)")
-        role_lvl25 = utils.get(guild.roles, name="Shrine Maiden (level 25)")
-        role_lvl30 = utils.get(guild.roles, name="Noble (level 30)")
-        role_lvl40 = utils.get(guild.roles, name="Aub (level 40)")
-        role_lvl50 = utils.get(guild.roles, name="Zent (level 50)")
-        role_lvl60 = utils.get(guild.roles, name="Goddess (level 60)")
 
         async def areyousure(ctx):
             button_yes2 = Button(label="Yes I am sure", style=ButtonStyle.red)
@@ -107,15 +112,9 @@ class LevelingSlash(commands.Cog):
             async def resetxp(ctx):
                 await reset_rank(self.bot, interaction.user.id, interaction.guild.id)
                 await ctx.response.send_message(f"{ctx.user.mention} has reset their rank.")
-                await member.remove_roles(role_lvl5)
-                await member.remove_roles(role_lvl10)
-                await member.remove_roles(role_lvl15)
-                await member.remove_roles(role_lvl20)
-                await member.remove_roles(role_lvl25)
-                await member.remove_roles(role_lvl30)
-                await member.remove_roles(role_lvl40)
-                await member.remove_roles(role_lvl50)
-                await member.remove_roles(role_lvl60)
+                for _, role_name in level_roles:
+                    role = utils.get(guild.roles, name=role_name)
+                    await member.remove_roles(role)
         
             button_yes2.callback = resetxp
             warnview2 = View (timeout=180)
@@ -146,30 +145,16 @@ class LevelingSlash(commands.Cog):
         button_yes1 = Button(label="Yes", style=ButtonStyle.red)
         guild = self.bot.get_guild(interaction.guild.id)
         member = guild.get_member(interaction.user.id)
-        role_lvl5 = utils.get(guild.roles, name="Farmer (level 5)")
-        role_lvl10 = utils.get(guild.roles, name="Soldier (level 10)")
-        role_lvl15 = utils.get(guild.roles, name="Craftsman (level 15)")
-        role_lvl20 = utils.get(guild.roles, name="Merchant (level 20)")
-        role_lvl25 = utils.get(guild.roles, name="Shrine Maiden (level 25)")
-        role_lvl30 = utils.get(guild.roles, name="Noble (level 30)")
-        role_lvl40 = utils.get(guild.roles, name="Aub (level 40)")
-        role_lvl50 = utils.get(guild.roles, name="Zent (level 50)")
-        role_lvl60 = utils.get(guild.roles, name="Goddess (level 60)")
+
         async def areyousure(ctx):
             button_yes2 = Button(label="Yes I am sure", style=ButtonStyle.red)
 
             async def resetxp(ctx):
                 await reset_rank(self.bot, member.id, interaction.guild.id)
                 await ctx.response.send_message(f"{ctx.user.mention} has reset {member.mention}'s rank.")
-                await member.remove_roles(role_lvl5)
-                await member.remove_roles(role_lvl10)
-                await member.remove_roles(role_lvl15)
-                await member.remove_roles(role_lvl20)
-                await member.remove_roles(role_lvl25)
-                await member.remove_roles(role_lvl30)
-                await member.remove_roles(role_lvl40)
-                await member.remove_roles(role_lvl50)
-                await member.remove_roles(role_lvl60)
+                for _, role_name in level_roles:
+                    role = utils.get(guild.roles, name=role_name)
+                    await member.remove_roles(role)
         
             button_yes2.callback = resetxp
             warnview2 = View (timeout=180)
