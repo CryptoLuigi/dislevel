@@ -484,7 +484,9 @@ async def get_page(bot, interaction, page:int) -> None:
             try:
                 member = await guild.fetch_member(memberid)
             except:
-                member = "Left server"
+                # Left server
+                member = None
+
             position += 1
             try:                
                 if member.nick == f'None' or member.nick == None:
@@ -496,10 +498,10 @@ async def get_page(bot, interaction, page:int) -> None:
             except:
                     leaderboard_image_data[f"username_{position}"] = memberid
 
-            bg = await get_bg_value(bot=bot, guild_id=interaction.guild.id, bgnum=bgnum)
+            bg = ["https://dummyimage.com/600x400/fff/fff"]
             leaderboard_image_data[f"position_{position}"] = position+((page*10)-10)
             leaderboard_image_data[f"bg_{position}"] = await get_bg_value(bot=bot, guild_id=interaction.guild.id, bgnum=bgnum)         
-            leaderboard_image_data[f"profile_image_{position}"] = str(member.display_avatar.url)
+            leaderboard_image_data[f"profile_image_{position}"] = str(member.display_avatar.url) if member else None
             leaderboard_image_data[f"xp_{position}"] = data['xp']
             leaderboard_image_data[f"level_{position}"] = data['level']
             leaderboard_image_data[f"position_{position}"] = await get_member_position(bot, memberid, interaction.guild.id)
@@ -714,13 +716,14 @@ async def get_rank(bot, interaction, member) -> None:
 
         user_data["position"] = await get_member_position(bot, member.id, interaction.guild.id)
         user_data["profile_image"] = str(member.display_avatar.url)
-        user_data["name"] = str(member).split("#")[0]
-        user_data["descriminator"] = str(member).split("#")[1]
-        
+        user_info = str(member).split("#")
+        user_data["name"] = user_info[0]
+        user_data["descriminator"] = user_info[1] if len(user_info) > 1 else "0"
+
         bgmax = await get_bg_data(bot, interaction.guild.id)
         bgmax = int(bgmax[0])
         bgnum = random.randint(1, bgmax)
-        bg = await get_bg_value(bot=bot, guild_id=interaction.guild.id, bgnum=bgnum)
+        bg = ["https://dummyimage.com/600x400/fff/fff"]
         image = await run_in_executor(get_card, data=user_data, nick=member.nick, bg=bg[0])
         file = File(fp=image, filename="card.png")
         Leaderboard = Button(label="Show the Leaderboard", style=ButtonStyle.green, emoji="<:MyneSparkle:1018941182430154902>")
@@ -747,7 +750,7 @@ async def get_rank(bot, interaction, member) -> None:
         bgmax = await get_bg_data(bot, interaction.guild.id)
         bgmax = int(bgmax[0])
         bgnum = random.randint(1, bgmax)
-        bg = await get_bg_value(bot=bot, guild_id=interaction.guild.id, bgnum=bgnum)
+        bg = ["https://dummyimage.com/600x400/fff/fff"]
         image = await run_in_executor(get_card, data=user_data, nick=member.nick, bg=bg[0])
         file = File(fp=image, filename="card.png")
 

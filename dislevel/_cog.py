@@ -30,7 +30,8 @@ class Leveling(commands.Cog):
         try:
             if is_bot_channel(ctx.channel):
                 await get_rank(self.bot, ctx, member)
-        except:
+        except Exception as ex:
+            print("Exception getting user rank:", ex)
             await ctx.send(content=f"{ctx.author.mention} That user is unranked or a bot.")
 
     @commands.command(aliases=["lb"])

@@ -8,16 +8,16 @@ from databases import Database
 from dislevel import init_dislevel
 
 level_roles = [
-    (5, "Farmer (level 5)"),
-    (10, "Soldier (level 10)"),
-    (15, "Craftsman (level 15)"),
-    (20, "Merchant (level 20)"),
-    (25, "Mayor (level 25)"),
-    (30, "Shrine Maiden (level 30)"),
-    (35, "Noble (level 35)"),
-    (40, "Aub (level 40)"),
-    (50, "Zent (level 50)"),
-    (60, "Goddess (level 60)"),
+    (5, "Farmer (Level 5)"),
+    (10, "Soldier (Level 10)"),
+    (15, "Craftsman (Level 15)"),
+    (20, "Merchant (Level 20)"),
+    (25, "Mayor (Level 25)"),
+    (30, "Shrine Maiden (Level 30)"),
+    (35, "Noble (Level 35)"),
+    (40, "Aub (Level 40)"),
+    (50, "Zent (Level 50)"),
+    (60, "Goddess (Level 60)"),
 ]
 
 
@@ -37,7 +37,7 @@ class LevelingSlash(commands.Cog):
                 await get_rank(self.bot, interaction, member)
             else:
                 await interaction.response.send_message(ephemeral=True, content=f"{interaction.user.mention} This can only be used in <#{botchannel[0]}>")
-        except:
+        except Exception:
             await interaction.response.send_message(content=f"{interaction.user.mention} That user is unranked or a bot.")
 
     @slash_command(description="Check rank of a user")
